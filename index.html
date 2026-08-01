@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIIGAA · Carga Lectiva Web — UNS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --maroon:#a4222c;      /* UNS crest red — badges, danger, accents */
+  --maroon-dark:#7c1620;
+  --navy:#1e4d2e;        /* UNS institutional green — topbar, sidebar, headers */
+  --navy-2:#2a6339;      /* lighter green — hover */
+  --gold:#1d6091;        /* blue accent — primary buttons, focus, active states */
+  --gold-dark:#134a70;
+  --paper:#f6f8f5;
+  --paper-2:#eaf0ea;
+  --ink:#20241f;
+  --ink-soft:#5b6459;
+  --line:#d7e0d6;
+  --ok:#2a7a45;
+  --warn:#a14b1f;
+  --white:#ffffff;
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:'IBM Plex Sans', sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.serif{font-family:'Source Serif 4', Georgia, serif;}
+.mono{font-family:'IBM Plex Mono', monospace;}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+
+/* ============ LOGIN (calca del boceto UNS) ============ */
+#loginScreen{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  background:#d9d9d9;
+  padding:24px;
+}
+.login-card{
+  width:100%;max-width:420px;
+  background:var(--white);
+  border-radius:8px;
+  box-shadow:0 12px 32px rgba(0,0,0,.18);
+  overflow:hidden;
+}
+.login-head{padding:26px 26px 18px;text-align:center;}
+.login-head img{max-width:100%;max-height:120px;object-fit:contain;}
+hr.login-div{border:none;border-top:2px solid var(--maroon);margin:0 26px;}
+.login-title{
+  padding:16px 26px 4px;text-align:center;
+  font-family:'Source Serif 4',serif;font-weight:700;font-size:17px;
+  letter-spacing:.03em;color:var(--navy-2);
+}
+.login-banner{
+  background:var(--navy);color:var(--white);
+  text-align:center;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:12px 0;margin-top:14px;
+}
+.login-body{padding:22px 26px 26px;}
+/* fila ícono + input */
+.field{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.field .ico{width:22px;flex-shrink:0;text-align:center;color:var(--ink);}
+.field .ico svg{width:20px;height:20px;display:block;}
+.field input{
+  flex:1;padding:11px 12px;border:1px solid var(--line);border-radius:4px;
+  font-size:13px;color:var(--ink);background:var(--white);text-transform:uppercase;letter-spacing:.02em;
+}
+.field input::placeholder{color:#9aa39a;}
+.field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(29,96,145,.18);}
+.pass-wrap{flex:1;display:flex;align-items:center;gap:8px;}
+.pass-wrap input{flex:1;}
+.eye-btn{
+  width:36px;height:36px;flex-shrink:0;border:none;border-radius:4px;
+  background:var(--gold);color:var(--white);font-size:15px;
+}
+.eye-btn:hover{background:var(--gold-dark);}
+.btn-primary{
+  width:100%;padding:13px;border:none;background:var(--gold);color:var(--white);
+  font-size:14px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;
+  border-radius:4px;transition:background .15s;margin-top:4px;
+}
+.btn-primary:hover{background:var(--gold-dark);}
+.login-foot{text-align:right;margin-top:12px;font-size:10.5px;font-weight:600;color:var(--maroon-dark);}
+.login-error{
+  font-size:12px;color:var(--maroon-dark);background:#fbeaea;border:1px solid #e6c3c3;
+  padding:8px 10px;margin-bottom:14px;border-radius:4px;display:none;
+}
+
+/* ============ APP SHELL (topbar + subbarra + menú de íconos) ============ */
+#appScreen{display:none;min-height:100vh;}
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:54px;z-index:21;
+  background:var(--navy);color:var(--white);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;
+  box-shadow:0 2px 6px rgba(0,0,0,.18);
+}
+.topbar .left{display:flex;align-items:center;gap:12px;}
+.hamburger{
+  background:transparent;border:none;color:var(--white);font-size:18px;
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:3px;
+}
+.hamburger:hover{background:rgba(255,255,255,.12);}
+.topbar .badge{
+  width:30px;height:30px;border-radius:50%;border:2px solid var(--white);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+  font-family:'Source Serif 4',serif;background:rgba(255,255,255,.08);cursor:pointer;
+}
+.topbar .title{font-size:14px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;}
+.topbar .right{display:flex;align-items:center;gap:14px;font-size:12px;}
+.userchip{color:#d7e6da;}
+.logoutbtn{
+  background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.4);padding:7px 12px;
+  font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-radius:var(--radius);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.logoutbtn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.6);}
+
+/* subbarra gris con la miga de pan */
+.subbar{
+  position:fixed;top:54px;left:0;right:0;height:32px;z-index:20;
+  background:var(--paper-2);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;padding:0 18px;
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;
+}
+.subbar .dot{width:7px;height:7px;background:var(--navy);display:inline-block;}
+
+.shell{display:flex;padding-top:86px;min-height:100vh;}
+
+/* menú lateral: columna angosta ícono + etiqueta, estilo de la captura */
+.sidebar{
+  width:130px;flex-shrink:0;background:var(--navy);
+  padding:12px 0 20px;position:sticky;top:86px;align-self:flex-start;
+  height:calc(100vh - 86px);overflow-y:auto;
+  transition:width .15s, padding .15s;
+}
+.sidebar.collapsed{width:0;padding:0;overflow:hidden;}
+.sidebar-avatar{
+  width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;margin:2px auto 10px;
+  color:var(--white);font-size:19px;
+}
+.sidebar-menu-label{
+  text-align:center;font-size:10px;letter-spacing:.14em;font-weight:700;color:var(--white);
+  text-transform:uppercase;padding:8px 4px;margin-bottom:4px;background:rgba(0,0,0,.15);
+}
+.nav-group{margin-bottom:1px;}
+.nav-tab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  padding:13px 6px;color:#c7cfdd;font-size:10px;letter-spacing:.02em;text-align:center;line-height:1.2;
+  border-left:3px solid transparent;
+  cursor:pointer;user-select:none;
+  transition:background .12s;
+}
+.nav-tab:hover{background:rgba(255,255,255,.08);color:var(--white);}
+.nav-tab.active-group{
+  background:var(--paper);color:var(--navy);border-left-color:var(--maroon);font-weight:600;
+}
+.nav-tab .ico{font-size:19px;line-height:1;}
+.nav-tab .chev{display:none;}
+.sub-list{max-height:0;overflow:hidden;transition:max-height .2s ease;background:rgba(0,0,0,.18);}
+.sub-list.open{max-height:400px;}
+.sub-item{
+  padding:8px 6px;font-size:9.5px;color:#b9c9ba;text-align:center;line-height:1.3;
+  border-left:3px solid transparent;cursor:pointer;
+}
+.sub-item:hover{color:var(--white);background:rgba(255,255,255,.06);}
+.sub-item.active{
+  color:var(--white);border-left-color:var(--gold);background:rgba(29,96,145,.25);font-weight:600;
+}
+
+.main{flex:1;min-width:0;padding:26px 30px 60px;}
+.view{display:none;}
+.view.active{display:block;}
+
+.panel{
+  background:var(--white);border:1px solid var(--line);position:relative;margin-bottom:22px;
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--navy);color:var(--white);
+  padding:10px 16px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+}
+.panel-head .tag{
+  font-size:10px;background:var(--maroon);padding:3px 8px;border-radius:2px;letter-spacing:.06em;
+}
+.panel-body{padding:16px;}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;}
+
+.btn{
+  border:1px solid var(--line);background:var(--white);color:var(--ink);
+  padding:7px 12px;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:2px;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{border-color:var(--navy);}
+.btn-dark{background:var(--navy);color:var(--white);border-color:var(--navy);}
+.btn-dark:hover{background:var(--navy-2);}
+.btn-maroon{background:var(--maroon);color:var(--white);border-color:var(--maroon);}
+.btn-maroon:hover{background:var(--maroon-dark);}
+.btn-ghost{background:transparent;}
+.btn-sm{padding:5px 9px;font-size:10.5px;}
+.btn[disabled]{opacity:.4;cursor:not-allowed;}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{
+  text-align:left;background:var(--paper-2);color:var(--ink-soft);
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+tbody td{padding:9px 10px;border-bottom:1px solid #ece5d3;vertical-align:middle;}
+tbody tr:hover{background:#faf7ee;}
+.tbl-wrap{overflow-x:auto;}
+.empty-row td{text-align:center;color:var(--ink-soft);padding:26px;font-style:italic;}
+
+.pill{padding:2px 8px;border-radius:20px;font-size:10px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;}
+.pill-ok{background:#e2ede2;color:var(--ok);}
+.pill-warn{background:#f5e2d3;color:var(--warn);}
+.pill-neutral{background:#eee7d6;color:var(--ink-soft);}
+
+.icon-btn{
+  width:26px;height:26px;border:1px solid var(--line);background:var(--white);
+  display:inline-flex;align-items:center;justify-content:center;border-radius:2px;font-size:12px;
+}
+.icon-btn.danger{color:var(--maroon);}
+.icon-btn.danger:hover{background:#fbeaea;border-color:var(--maroon);}
+.icon-btn.edit{color:var(--ok);}
+.icon-btn.edit:hover{background:#e2ede2;border-color:var(--ok);}
+.icon-btn.info{color:var(--navy);}
+.icon-btn.info:hover{background:var(--paper-2);border-color:var(--navy);}
+
+/* vista Presentación: banda gris + logo + texto, como el boceto */
+.pres-banner{
+  background:var(--paper-2);border:1px solid var(--line);
+  text-align:center;font-weight:700;letter-spacing:.02em;color:var(--ink);
+  padding:12px 16px;margin:-26px -30px 26px;
+}
+.pres-wrap{display:flex;gap:34px;flex-wrap:wrap;align-items:flex-start;}
+.pres-logo{flex:0 0 auto;width:230px;max-width:100%;}
+.pres-logo img{width:100%;height:auto;display:block;}
+.pres-text{flex:1;min-width:280px;}
+.pres-text h2{margin:0 0 14px;color:var(--ink);font-size:22px;}
+.pres-text p{line-height:1.7;max-width:64ch;margin:0 0 14px;}
+.pres-text .periodo{font-weight:700;color:var(--navy-2);}
+.pres-text .pres-firma{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:18px;}
+
+.info-box{
+  font-size:12px;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);
+  padding:12px 14px;margin-bottom:14px;line-height:1.5;
+}
+.info-box strong{color:var(--ink);}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-bottom:14px;}
+.form-grid .full{grid-column:1/-1;}
+.f-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:4px;display:block;}
+.f-input, select.f-input{
+  width:100%;padding:8px 10px;border:1px solid var(--line);background:var(--paper);font-size:13px;border-radius:2px;
+}
+.f-static{
+  padding:8px 10px;background:#f0ede2;border:1px dashed var(--line);font-size:12.5px;color:var(--ink-soft);
+}
+.section-title{
+  font-size:13px;font-weight:600;color:var(--navy);letter-spacing:.02em;margin:0 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-title .num{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--navy);color:var(--white);
+  padding:1px 6px;border-radius:2px;
+}
+.helper{font-size:11.5px;color:var(--ink-soft);margin:8px 0 0;line-height:1.5;}
+.toast{
+  position:fixed;bottom:20px;right:20px;background:var(--navy);color:var(--white);
+  padding:12px 18px;font-size:12.5px;border-left:4px solid var(--gold);z-index:100;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);display:none;max-width:320px;
+}
+.dropdown-wrap{position:relative;display:inline-block;}
+.dropdown-menu{
+  position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--line);
+  min-width:150px;z-index:30;display:none;box-shadow:0 8px 20px rgba(0,0,0,.12);
+}
+.dropdown-menu.open{display:block;}
+.dropdown-menu button{
+  width:100%;text-align:left;background:none;border:none;padding:9px 12px;font-size:12px;color:var(--ink);
+}
+.dropdown-menu button:hover{background:var(--paper-2);}
+.dropdown-menu button.active-opt{color:var(--maroon);font-weight:600;}
+
+.folio{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);
+  border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:16px;display:flex;justify-content:space-between;
+}
+.stat-row{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+.stat-card{
+  border:1px solid var(--line);padding:10px 14px;min-width:120px;background:var(--paper-2);
+}
+.stat-card .n{font-family:'Source Serif 4',serif;font-size:22px;color:var(--navy);}
+.stat-card .l{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);}
+.search-inline{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:flex-end;}
+.search-inline .f-input{width:auto;flex:1;min-width:220px;}
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN SCREEN ======================= -->
+<div id="loginScreen">
+  <div class="login-card">
+    <!-- logo institucional -->
+    <div class="login-head">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Universidad_Nacional_del_Santa_Logo.png" alt="Universidad Nacional del Santa">
+    </div>
+    <hr class="login-div">
+    <div class="login-title">CARGA LECTIVA WEB</div>
+    <div class="login-banner">Logueo</div>
+
+    <div class="login-body">
+      <div class="login-error" id="loginError">Complete usuario, IDCard y contraseña para continuar.</div>
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <!-- usuario -->
+        <div class="field">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span>
+          <input type="text" id="loginUser" placeholder="INGRESE USUARIO *" autocomplete="username">
+        </div>
+        <!-- idcard -->
+        <div class="field">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M13 10h6M13 14h4"/></svg></span>
+          <input type="text" id="loginCard" placeholder="INGRESE IDCARD *">
+        </div>
+        <!-- contraseña -->
+        <div class="field">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+          <div class="pass-wrap">
+            <input type="password" id="loginPass" placeholder="INGRESE CONTRASEÑA *" autocomplete="current-password">
+            <button type="button" id="togglePass" class="eye-btn" onclick="togglePassword()" title="Mostrar/ocultar contraseña">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Validar Acceso</button>
+      </form>
+      <div class="login-foot">PRODUCCION@UDEMSI Vr. 1.1.5</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= APP SHELL ======================= -->
+<div id="appScreen">
+  <div class="topbar">
+    <div class="left">
+      <button class="hamburger" onclick="toggleSidebar()" title="Mostrar/ocultar menú">☰</button>
+      <div class="badge" onclick="navigate('presentacion')" title="Ir a Presentación">UNS</div>
+      <div class="title">Departamento Académico</div>
+    </div>
+    <div class="right">
+      <span class="userchip" id="userChip">Usuario Trabajador</span>
+      <button class="logoutbtn" onclick="requestLogout()">⏻ Cerrar Sesión</button>
+    </div>
+  </div>
+  <div class="subbar"><span class="dot"></span><span id="breadcrumb">Presentación</span></div>
+
+  <div class="shell">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ======================================================================
+   DATA MODEL — mock data reflecting the module described in the manual
+   ====================================================================== */
+
+const PERIODO = "2026-02";
+
+/* ======================================================================
+   SUPABASE — CONFIGURACIÓN Y PERSISTENCIA
+   ====================================================================== */
+// 1. Crea un proyecto gratuito en https://supabase.com
+// 2. Ve a Project Settings > API y copia estos dos valores aquí:
+const SUPABASE_URL = "https://dcqcsjvlpbbqqqaxinzn.supabase.co/rest/v1/";       // ej: https://xxxxx.supabase.co
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjcWNzanZscGJicXFxYXhpbnpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1Njc0MzAsImV4cCI6MjEwMTE0MzQzMH0.XexWrnmvnoCBGQBzexqqQK8zBYecozsVIQtWPCuYNMc";
+
+const supabase = (SUPABASE_URL.startsWith("http"))
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+if(!supabase){
+  console.warn("Supabase no está configurado todavía. La app funcionará en modo local (sin guardar datos). Completa SUPABASE_URL y SUPABASE_ANON_KEY.");
+}
+
+let estadoCargado = false;
+let guardarTimer = null;
+
+// Trae el estado guardado del periodo activo (docentes, asignaturas, etc.)
+async function cargarEstado(){
+  if(!supabase) { estadoCargado = true; return; }
+  const { data, error } = await supabase
+    .from('estado_sistema')
+    .select('*')
+    .eq('periodo', PERIODO)
+    .maybeSingle();
+
+  if(error){
+    console.error("Error cargando estado:", error);
+    toast("No se pudo cargar la información desde la base de datos.");
+    estadoCargado = true;
+    return;
+  }
+
+  if(data){
+    docentes = data.docentes || docentes;
+    asignaturas = data.asignaturas || asignaturas;
+    directorio = data.directorio || directorio;
+    ofertadasPendientes = data.ofertadas_pendientes || ofertadasPendientes;
+    nextDocenteId = data.next_docente_id || nextDocenteId;
+  } else {
+    // Primera vez que se usa este periodo: se guarda el estado inicial (datos de ejemplo)
+    await guardarEstadoInmediato();
+  }
+  estadoCargado = true;
+}
+
+// Guarda inmediatamente (sin debounce), usado por ejemplo al inicializar
+async function guardarEstadoInmediato(){
+  if(!supabase) return;
+  const { error } = await supabase.from('estado_sistema').upsert({
+    periodo: PERIODO,
+    docentes,
+    asignaturas,
+    directorio,
+    ofertadas_pendientes: ofertadasPendientes,
+    next_docente_id: nextDocenteId,
+    actualizado_en: new Date().toISOString()
+  }, { onConflict: 'periodo' });
+  if(error) console.error("Error guardando estado:", error);
+}
+
+// Guarda con un pequeño retraso para no disparar una escritura por cada tecla/click
+function guardarEstado(){
+  if(!supabase || !estadoCargado) return;
+  clearTimeout(guardarTimer);
+  guardarTimer = setTimeout(guardarEstadoInmediato, 600);
+}
+
+let cargaTipo = "PROPUESTA"; // PROPUESTA | DEFINITIVA
+let deshacerHabilitado = false;
+
+let seq = { grp:1000 };
+
+// Directorio (personas)
+let directorio = [
+  {dni:"41772210", nombres:"DENIS JAVIER", apPat:"ARANGURI", apMat:"CAYETANO", sexo:"M", telefono:"943-112233", correo:"aranguri@uns.edu.pe", fecha:"2021-03-11"},
+  {dni:"29887744", nombres:"JORGE LUIS", apPat:"AREVALO", apMat:"DAZA", sexo:"M", telefono:"943-556677", correo:"arevalo@uns.edu.pe", fecha:"2020-08-02"},
+  {dni:"18009933", nombres:"HECTOR DOMINGO", apPat:"BENITES", apMat:"VILLEGAS", sexo:"M", telefono:"943-887766", correo:"benites@uns.edu.pe", fecha:"2019-01-14"},
+  {dni:"32117744", nombres:"LUIS CARLOS", apPat:"CALDERON", apMat:"RODRIGUEZ", sexo:"M", telefono:"943-221100", correo:"calderonr@uns.edu.pe", fecha:"2022-04-19"},
+  {dni:"67867867", nombres:"MILAGROS RITA", apPat:"VILLAJULCA", apMat:"LANDA", sexo:"F", telefono:"943-000111", correo:"villajulca@uns.edu.pe", fecha:"2021-07-25"},
+  {dni:"40556677", nombres:"SAMUEL HONORIO", apPat:"MARTINEZ", apMat:"HUAMAN", sexo:"M", telefono:"943-334455", correo:"martinez@uns.edu.pe", fecha:"2018-02-09"},
+];
+
+// Docentes habilitados en el periodo
+let docentes = [
+  {id:1, nombre:"ARANGURI CAYETANO DENIS JAVIER", tipo:"C", categoria:"DOCENTE CONTRATADO A - 1 (A1)", ht:2, hp:16},
+  {id:2, nombre:"AREVALO DAZA JORGE LUIS",         tipo:"C", categoria:"DOCENTE CONTRATADO A - 2 (A2)", ht:8, hp:6},
+  {id:3, nombre:"BENITES VILLEGAS HECTOR DOMINGO", tipo:"N", categoria:"PRINCIPAL (DE)",                ht:3, hp:12},
+  {id:4, nombre:"CALDERON RODRIGUEZ LUIS CARLOS",  tipo:"N", categoria:"DOCENTE CONTRATADO B - 1 (B1)", ht:1, hp:16},
+  {id:5, nombre:"CALDERON TORRES HUGO ROLANDO",    tipo:"N", categoria:"ASOCIADO (DE)",                 ht:1, hp:16},
+  {id:6, nombre:"ANGELES BUSTOS ANDRES ALEJANDRO", tipo:"C", categoria:"DOCENTE CONTRATADO B - 2 (B2)", ht:0, hp:0},
+  {id:7, nombre:"BECERRA VASQUEZ FEDERICO ALCIBIADES", tipo:"C", categoria:"DOCENTE CONTRATADO B - 1 (B1)", ht:0, hp:0},
+  {id:8, nombre:"BELLIDO VALDIVIEZO OMAR",         tipo:"C", categoria:"DOCENTE CONTRATADO B - 1 (B1)", ht:0, hp:0},
+  {id:9, nombre:"BOCANEGRA RAMOS ALBERTO",         tipo:"C", categoria:"AUXILIAR (TC)",                 ht:0, hp:0},
+  {id:10,nombre:"MARTINEZ HUAMAN SAMUEL HONORIO",  tipo:"N", categoria:"ASOCIADO (DE)",                 ht:2, hp:8},
+];
+let nextDocenteId = 100;
+
+// Asignaturas ofertadas / configuradas + sus grupos
+let asignaturas = [
+  {id:1, codigo:"1111-0017", nombre:"DIBUJO APLICADO A LA INGENIERIA EN ENERGIA", especialidad:"ING. EN ENERGIA", plan:"20181101", ciclo:"II", ht:1, hp:4, lab:"SI", nma:36, nah:30, ngt:1, ngl:1, mod:"V", estado:"COMPLETO",
+    grupos:[
+      {tipo:"TEORIA",   grupo:"1",  seccion:null, horas:1, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"1A", seccion:null, horas:4, docenteId:null, horario:false},
+    ]},
+  {id:2, codigo:"1111-0025", nombre:"TERMODINAMICA II", especialidad:"ING. EN ENERGIA", plan:"20181101", ciclo:"V", ht:3, hp:0, lab:"NO", nma:53, nah:31, ngt:1, ngl:0, mod:"V", estado:"COMPLETO",
+    grupos:[
+      {tipo:"TEORIA", grupo:"1", seccion:null, horas:3, docenteId:1, horario:true},
+    ]},
+  {id:3, codigo:"1611-0044", nombre:"CALCULO DE ELEMENTOS DE MAQUINAS II", especialidad:"ING. MECANICA", plan:"20091601", ciclo:"VIII", ht:2, hp:2, lab:"NO", nma:1, nah:19, ngt:1, ngl:4, mod:"P", estado:"COMPLETO",
+    grupos:[
+      {tipo:"TEORIA",   grupo:"1",  seccion:null, horas:2, docenteId:2, horario:true},
+      {tipo:"PRACTICA", grupo:"1A", seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"1B", seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"1C", seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"1D", seccion:null, horas:2, docenteId:null, horario:false},
+    ]},
+  {id:4, codigo:"1111-0041", nombre:"CENTRALES TERMOELECTRICAS", especialidad:"ING. EN ENERGIA", plan:"20181101", ciclo:"VII", ht:2, hp:4, lab:"NO", nma:43, nah:14, ngt:1, ngl:4, mod:"S", estado:"COMPLETO",
+    grupos:[
+      {tipo:"TEORIA",   grupo:"1",  seccion:null, horas:2, docenteId:3, horario:true},
+      {tipo:"PRACTICA", grupo:"1A", seccion:null, horas:4, docenteId:3, horario:true},
+    ]},
+  {id:5, codigo:"1111-0030", nombre:"CIENCIA DE MATERIALES", especialidad:"ING. EN ENERGIA", plan:"20181101", ciclo:"VI", ht:2, hp:2, lab:"SI", nma:43, nah:0, ngt:1, ngl:2, mod:"P", estado:"COMPLETO",
+    grupos:[
+      {tipo:"TEORIA",   grupo:"1",  seccion:null, horas:2, docenteId:4, horario:true},
+      {tipo:"PRACTICA", grupo:"1A", seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"1B", seccion:null, horas:2, docenteId:null, horario:false},
+    ]},
+  {id:6, codigo:"3380-0066", nombre:"ADMINISTRACION EDUCATIVA", especialidad:"IDIOMAS: INGLES - FRANCES", plan:"20183306", ciclo:"V", ht:2, hp:2, lab:"NO", nma:0, nah:0, ngt:4, ngl:1, mod:"V", estado:"INCOMPLETO",
+    grupos:[
+      {tipo:"TEORIA",   grupo:"1",  seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"1A", seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"TEORIA",   grupo:"2",  seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"2A", seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"TEORIA",   grupo:"3",  seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"3A", seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"TEORIA",   grupo:"4",  seccion:null, horas:2, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"4A", seccion:null, horas:2, docenteId:null, horario:false},
+    ]},
+  {id:7, codigo:"2001-0015", nombre:"ACTIVIDAD INTEGRADORA II - (BASQUETBOL)", especialidad:"ACUICULTURA", plan:"20202201", ciclo:"II", ht:0, hp:4, lab:"NO", nma:0, nah:0, ngt:0, ngl:1, mod:"V", estado:"COMPLETO",
+    grupos:[
+      {tipo:"PRACTICA", grupo:"0A", seccion:null, horas:4, docenteId:10, horario:false},
+    ]},
+  {id:8, codigo:"1311-0065", nombre:"SEGURIDAD VIAL", especialidad:"INGENIERIA CIVIL", plan:"20181301", ciclo:"X", ht:3, hp:2, lab:"NO", nma:0, nah:0, ngt:1, ngl:1, mod:"VIRTUAL", estado:"INCOMPLETO",
+    grupos:[
+      {tipo:"TEORIA",   grupo:"1",  seccion:null, horas:3, docenteId:null, horario:false},
+      {tipo:"PRACTICA", grupo:"1A", seccion:null, horas:2, docenteId:null, horario:false},
+    ]},
+];
+
+// Ofertadas por el DEDA aún no incorporadas (para "Agregar Asignatura")
+let ofertadasPendientes = [
+  {codigo:"3001-0016", nombre:"REALIDAD NACIONAL", especialidad:"DERECHO Y CIENCIA POLITICAS", plan:"20183501", ciclo:"II", ht:2, hp:0},
+  {codigo:"3340-0054", nombre:"DESARROLLO DE LOS PROCESOS SOCIALES EN EL PERU", especialidad:"PSICOLOGIA FILOSOFIA Y CCSS", plan:"20183304", ciclo:"VIII", ht:3, hp:0},
+];
+
+/* ======================================================================
+   NAV STRUCTURE
+   ====================================================================== */
+const NAV = [
+  {key:"presentacion", label:"Presentación", icon:"◆", single:true},
+  {key:"configuracion", label:"Configuración", icon:"⚙", items:[
+    {key:"docentes", label:"Docentes"},
+    {key:"asignaturas", label:"Asignaturas"},
+  ]},
+  {key:"directorio", label:"Directorio", icon:"▤", items:[
+    {key:"dir_persona", label:"Directorio Persona"},
+    {key:"dir_buscar", label:"Buscar Directorio"},
+  ]},
+  {key:"cargalectiva", label:"Carga Lectiva", icon:"▣", items:[
+    {key:"asignacion", label:"Asignación"},
+    {key:"reasignacion_carga", label:"Reasignación carga"},
+    {key:"reasignacion_docente", label:"Reasignación docente"},
+    {key:"agrupacion", label:"Agrupación"},
+    {key:"deshacer", label:"Deshacer Cambios"},
+  ]},
+  {key:"consultas", label:"Consultas", icon:"⌕", items:[
+    {key:"consulta_docente", label:"Carga Docente"},
+    {key:"consulta_asignatura", label:"Carga Asignatura"},
+  ]},
+  {key:"reportes", label:"Reportes", icon:"▥", items:[
+    {key:"rep_carga", label:"Carga Lectiva"},
+    {key:"rep_docentes", label:"Resumen Docentes"},
+    {key:"rep_asignaturas", label:"Resumen Asignaturas"},
+    {key:"rep_matriculados", label:"Resumen Matriculados"},
+    {key:"rep_especialidad", label:"Asignatura Especialidad"},
+  ]},
+];
+
+let currentView = "presentacion";
+let openGroup = null;
+
+/* ======================================================================
+   LOGIN
+   ====================================================================== */
+function togglePassword(){
+  const input = document.getElementById('loginPass');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function handleLogin(e){
+  e.preventDefault();
+  const usuario = document.getElementById('loginUser').value.trim();
+  const idcard = document.getElementById('loginCard').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const err = document.getElementById('loginError');
+  if(!usuario || !idcard || !p){
+    err.textContent = "Complete usuario, IDCard y contraseña para continuar.";
+    err.style.display = 'block';
+    return false;
+  }
+
+  const submitBtn = document.querySelector('#loginForm button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Validando…";
+
+  (async ()=>{
+    if(!supabase){
+      err.textContent = "La base de datos no está configurada (falta SUPABASE_URL/ANON_KEY).";
+      err.style.display = 'block';
+      submitBtn.disabled = false; submitBtn.textContent = "Validar Acceso";
+      return;
+    }
+
+    // 1) Busca el perfil por USUARIO (no por correo) en la tabla 'perfiles'
+    const { data: perfil, error: errPerfil } = await supabase
+      .from('perfiles')
+      .select('usuario, idcard, email, nombre')
+      .ilike('usuario', usuario)
+      .maybeSingle();
+
+    submitBtn.disabled = false; submitBtn.textContent = "Validar Acceso";
+
+    if(errPerfil){
+      console.error("Error consultando perfiles:", errPerfil);
+      err.textContent = "Error de conexión con la base de datos. Revisa la consola (F12) para más detalle.";
+      err.style.display = 'block';
+      return;
+    }
+    if(!perfil){
+      err.textContent = "El usuario ingresado no existe.";
+      err.style.display = 'block';
+      return;
+    }
+    // 2) Valida el IDCard contra lo guardado en la base de datos
+    if(perfil.idcard.trim().toUpperCase() !== idcard.toUpperCase()){
+      err.textContent = "El IDCard no coincide con el usuario ingresado.";
+      err.style.display = 'block';
+      return;
+    }
+
+    // 3) Recién aquí se valida la contraseña, de forma segura, con Supabase Auth
+    submitBtn.disabled = true; submitBtn.textContent = "Validando…";
+    const { error: errAuth } = await supabase.auth.signInWithPassword({ email: perfil.email, password: p });
+    submitBtn.disabled = false; submitBtn.textContent = "Validar Acceso";
+
+    if(errAuth){
+      console.error("Error de autenticación:", errAuth);
+      // Este es el motivo típico por el que "no pasa del login": el correo no fue confirmado
+      if(errAuth.message.toLowerCase().includes("confirm")){
+        err.textContent = "Tu cuenta aún no está confirmada. En Supabase, ve a Authentication > Users, abre el usuario y actívalo (o créalo marcando 'Auto Confirm User').";
+      } else {
+        err.textContent = "Contraseña incorrecta.";
+      }
+      err.style.display = 'block';
+      return;
+    }
+
+    err.style.display = 'none';
+    document.getElementById('userChip').textContent = (perfil.nombre || usuario).toUpperCase() + " · TRABAJADOR";
+    await entrarAlSistema();
+  })();
+
+  return false;
+}
+
+async function entrarAlSistema(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('main').innerHTML = `<p class="helper">Cargando información…</p>`;
+  await cargarEstado();
+  buildSidebar();
+  navigate('presentacion');
+}
+
+function requestLogout(){
+  if(confirm("¿Desea cerrar la sesión de usuario?")){
+    (async ()=>{
+      if(supabase) await supabase.auth.signOut();
+      estadoCargado = false;
+      document.getElementById('appScreen').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('loginForm').reset();
+    })();
+  }
+}
+
+// Si ya había una sesión activa (el usuario no cerró sesión), entra directo sin pedir login otra vez
+window.addEventListener('DOMContentLoaded', async ()=>{
+  if(!supabase) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  if(session){
+    const { data: perfil } = await supabase.from('perfiles').select('usuario, nombre').eq('email', session.user.email).maybeSingle();
+    document.getElementById('userChip').textContent = ((perfil && (perfil.nombre || perfil.usuario)) || session.user.email || "USUARIO").toUpperCase() + " · TRABAJADOR";
+    await entrarAlSistema();
+  }
+});
+
+/* ======================================================================
+   SIDEBAR / ROUTER
+   ====================================================================== */
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function buildSidebar(){
+  const sb = document.getElementById('sidebar');
+  // cabecera fija: avatar + etiqueta "Menú" (decorativa, como en el boceto)
+  sb.innerHTML = `<div class="sidebar-avatar">👤</div><div class="sidebar-menu-label">Menú</div>`;
+  NAV.forEach(group=>{
+    if(group.single) return; // Presentación se accede desde el logo del topbar, no como ícono
+    const wrap = document.createElement('div');
+    wrap.className = 'nav-group';
+
+    const tab = document.createElement('div');
+    tab.className = 'nav-tab';
+    tab.id = 'tab-'+group.key;
+    tab.innerHTML = `<span class="ico">${group.icon}</span><span>${group.label}</span>` + (group.single ? '' : '<span class="chev">›</span>');
+    tab.onclick = ()=>{
+      if(group.single){ navigate(group.key); return; }
+      toggleGroup(group.key);
+    };
+    wrap.appendChild(tab);
+
+    if(!group.single){
+      const list = document.createElement('div');
+      list.className = 'sub-list';
+      list.id = 'list-'+group.key;
+      group.items.forEach(it=>{
+        const item = document.createElement('div');
+        item.className = 'sub-item';
+        item.id = 'item-'+it.key;
+        item.textContent = it.label;
+        item.onclick = ()=> navigate(it.key);
+        list.appendChild(item);
+      });
+      wrap.appendChild(list);
+    }
+    sb.appendChild(wrap);
+  });
+}
+
+function toggleGroup(key){
+  const tab = document.getElementById('tab-'+key);
+  const list = document.getElementById('list-'+key);
+  const isOpen = list.classList.contains('open');
+  document.querySelectorAll('.sub-list').forEach(l=>l.classList.remove('open'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('open'));
+  if(!isOpen){ list.classList.add('open'); tab.classList.add('open'); openGroup = key; }
+  else { openGroup = null; }
+}
+
+function findGroupFor(viewKey){
+  for(const g of NAV){
+    if(g.single && g.key===viewKey) return null;
+    if(g.items && g.items.some(i=>i.key===viewKey)) return g.key;
+  }
+  return null;
+}
+
+function navigate(viewKey){
+  currentView = viewKey;
+  // sidebar highlight
+  document.querySelectorAll('.sub-item').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active-group'));
+  const grpKey = findGroupFor(viewKey);
+  if(grpKey){
+    document.getElementById('item-'+viewKey)?.classList.add('active');
+    const list = document.getElementById('list-'+grpKey);
+    const tab = document.getElementById('tab-'+grpKey);
+    document.querySelectorAll('.sub-list').forEach(l=>l.classList.remove('open'));
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('open'));
+    list.classList.add('open'); tab.classList.add('open');
+  } else {
+    document.getElementById('tab-'+viewKey)?.classList.add('active-group');
+  }
+  // breadcrumb
+  let crumb = "Presentación";
+  NAV.forEach(g=>{
+    if(g.single && g.key===viewKey) crumb = g.label;
+    if(g.items) g.items.forEach(i=>{ if(i.key===viewKey) crumb = g.label + " › " + i.label; });
+  });
+  document.getElementById('breadcrumb').textContent = crumb;
+  render();
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=> t.style.display='none', 2600);
+}
+
+function esc(s){ return (s===null||s===undefined) ? "" : String(s); }
+
+/* ======================================================================
+   RENDER DISPATCH
+   ====================================================================== */
+function render(){
+  const main = document.getElementById('main');
+  const renderers = {
+    presentacion: renderPresentacion,
+    docentes: renderDocentes,
+    asignaturas: renderAsignaturas,
+    dir_persona: renderDirPersona,
+    dir_buscar: renderDirBuscar,
+    asignacion: renderAsignacion,
+    reasignacion_carga: renderReasignacionCarga,
+    reasignacion_docente: renderReasignacionDocente,
+    agrupacion: renderAgrupacion,
+    deshacer: renderDeshacer,
+    consulta_docente: renderConsultaDocente,
+    consulta_asignatura: renderConsultaAsignatura,
+    rep_carga: renderRepCarga,
+    rep_docentes: renderRepDocentes,
+    rep_asignaturas: renderRepAsignaturas,
+    rep_matriculados: renderRepMatriculados,
+    rep_especialidad: renderRepEspecialidad,
+  };
+  main.innerHTML = "<div class='view active'></div>";
+  const target = main.querySelector('.view');
+  (renderers[currentView] || renderPresentacion)(target);
+  guardarEstado(); // persiste el estado actual (con pequeño retraso) en Supabase
+}
+
+function folio(titulo){
+  return `<div class="folio"><span>${titulo} · PERIODO ${PERIODO}</span><span>Tipo de carga: <b>${cargaTipo}</b></span></div>`;
+}
+
+/* ======================================================================
+   1. PRESENTACIÓN
+   ====================================================================== */
+function renderPresentacion(el){
+  const asignados = asignaturas.reduce((a,x)=>a+x.grupos.filter(g=>g.docenteId).length,0);
+  const totalGrupos = asignaturas.reduce((a,x)=>a+x.grupos.length,0);
+  const docentesConCarga = docentes.filter(d=>docenteHoras(d.id).total>0).length;
+  el.innerHTML = `
+    <div class="pres-banner">Bienvenido al módulo de Carga Lectiva Web</div>
+    <div class="pres-wrap">
+      <div class="pres-logo">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Universidad_Nacional_del_Santa_Logo.png" alt="Universidad Nacional del Santa">
+      </div>
+      <div class="pres-text">
+        <h2>Presentación</h2>
+        <p>
+          El módulo de Carga Lectiva Web le permitirá hacer el registro de la carga lectiva inicial,
+          misma que servirá para el proceso de matrícula online; también podrá ingresar la carga
+          lectiva definitiva, con la cual se hace la asignación de los registros de calificaciones.
+        </p>
+        <p class="periodo">Periodo Académico activo para este proceso: ${PERIODO}</p>
+        <div class="stat-row">
+          <div class="stat-card"><div class="n">${docentes.length}</div><div class="l">Docentes habilitados</div></div>
+          <div class="stat-card"><div class="n">${asignaturas.length}</div><div class="l">Asignaturas activas</div></div>
+          <div class="stat-card"><div class="n">${asignados}/${totalGrupos}</div><div class="l">Grupos asignados</div></div>
+          <div class="stat-card"><div class="n">${docentesConCarga}</div><div class="l">Docentes con carga</div></div>
+        </div>
+        <p class="pres-firma">— UDEMSI<br>UNS</p>
+      </div>
+    </div>`;
+}
+
+/* ======================================================================
+   2. CONFIGURACIÓN › DOCENTES
+   ====================================================================== */
+function docenteHoras(id){
+  let ht=0, hp=0;
+  asignaturas.forEach(a=>a.grupos.forEach(g=>{
+    if(g.docenteId===id){ if(g.tipo==='TEORIA') ht+=g.horas; else hp+=g.horas; }
+  }));
+  return {ht, hp, total: ht+hp};
+}
+
+function renderDocentes(el){
+  const rows = docentes.map(d=>{
+    const h = docenteHoras(d.id);
+    const estado = h.total>0 ? `<span class="pill pill-ok">Con Carga</span>` : `<span class="pill pill-neutral">Sin Carga</span>`;
+    return `<tr>
+      <td class="mono">${d.id}</td>
+      <td>${d.nombre}</td>
+      <td>${d.tipo}</td>
+      <td>${d.categoria}</td>
+      <td>${estado}</td>
+      <td style="text-align:right;">
+        <button class="icon-btn danger" title="Eliminar docente" onclick="eliminarDocente(${d.id})">✕</button>
+      </td>
+    </tr>`;
+  }).join("") || `<tr class="empty-row"><td colspan="6">No existe registro</td></tr>`;
+
+  el.innerHTML = `
+    ${folio("Configuración · Docentes")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Habilitados</span>
+        <div class="toolbar">
+          <button class="btn btn-dark btn-sm" onclick="agregarDocente()">＋ Agregar</button>
+          <button class="btn btn-dark btn-sm" onclick="crearContratoFicticio()">＋ Contrato ficticio</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="helper" style="margin-top:0;">
+          Establece qué docentes estarán habilitados para el presente periodo académico. Para eliminar un
+          docente, este no debe tener carga lectiva asignada.
+        </p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Nro</th><th>Nombre</th><th>Tipo</th><th>Categoría</th><th>Estado</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function eliminarDocente(id){
+  const h = docenteHoras(id);
+  if(h.total>0){
+    toast("No se puede eliminar: el docente tiene carga asignada.");
+    return;
+  }
+  if(confirm("¿Desea eliminar al docente del periodo académico?")){
+    docentes = docentes.filter(d=>d.id!==id);
+    toast("Docente eliminado del periodo.");
+    render();
+  }
+}
+
+function agregarDocente(){
+  const nombre = prompt("Buscar en Directorio (Escalafón) — ingrese nombre o apellido:");
+  if(!nombre) return;
+  const match = directorio.find(p => (p.apPat+" "+p.apMat+" "+p.nombres).toLowerCase().includes(nombre.toLowerCase()));
+  if(!match){ toast("No se encontraron coincidencias en el directorio."); return; }
+  const fullName = `${match.apPat} ${match.apMat} ${match.nombres}`;
+  if(docentes.some(d=>d.nombre===fullName)){ toast("Error: el docente ya existe en la lista."); return; }
+  if(confirm(`¿Confirma agregar a ${fullName} como docente del periodo?`)){
+    docentes.push({id:nextDocenteId++, nombre: fullName, tipo:"N", categoria:"AUXILIAR (TC)", ht:0, hp:0});
+    toast("Docente agregado correctamente.");
+    render();
+  }
+}
+
+function crearContratoFicticio(){
+  if(confirm("¿Desea crear un contrato ficticio para este departamento?")){
+    const n = docentes.filter(d=>d.nombre.startsWith("CONTRATO-DEP-")).length + 1;
+    const code = "CONTRATO-DEP-" + String(n).padStart(3,'0');
+    docentes.push({id:nextDocenteId++, nombre: code, tipo:"C", categoria:"POR CONTRATAR", ht:0, hp:0});
+    toast("Contrato ficticio creado: " + code);
+    render();
+  }
+}
+
+/* ======================================================================
+   3. CONFIGURACIÓN › ASIGNATURAS
+   ====================================================================== */
+function renderAsignaturas(el){
+  const rows = asignaturas.map(a=>{
+    const estadoPill = a.estado==='COMPLETO' ? `<span class="pill pill-ok">Completo</span>` : `<span class="pill pill-warn">Incompleto</span>`;
+    return `<tr>
+      <td class="mono">${a.codigo}</td>
+      <td>${a.nombre}</td>
+      <td>${a.especialidad}</td>
+      <td>${a.plan}</td>
+      <td>${a.ciclo}</td>
+      <td>${a.ht}</td><td>${a.hp}</td><td>${a.lab}</td>
+      <td>${a.nma}</td><td>${a.nah}</td><td>${a.ngt}</td><td>${a.ngl}</td><td>${a.mod}</td>
+      <td>${estadoPill}</td>
+      <td style="text-align:right;white-space:nowrap;">
+        <button class="icon-btn edit" title="Modificar" onclick="modificarAsignatura(${a.id})">✎</button>
+        <button class="icon-btn danger" title="Eliminar" onclick="eliminarAsignatura(${a.id})">✕</button>
+      </td>
+    </tr>`;
+  }).join("") || `<tr class="empty-row"><td colspan="14">No existe registro</td></tr>`;
+
+  el.innerHTML = `
+    ${folio("Configuración · Asignaturas")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Asignaturas Activas</span>
+        <div class="toolbar">
+          <button class="btn btn-dark btn-sm" onclick="agregarAsignatura()">＋ Agregar</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="helper" style="margin-top:0;">
+          Define, a partir de las asignaturas ofertadas por el DEDA, cuántos grupos de teoría y/o laboratorio
+          tendrá cada una en el periodo. El número de grupos de práctica es por cada grupo de teoría.
+        </p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Código</th><th>Asignatura</th><th>Especialidad</th><th>Plan</th><th>Ciclo</th>
+              <th>HT</th><th>HP</th><th>Lab</th><th>NMA</th><th>NAH</th><th>NGT</th><th>NGL</th><th>Mod</th><th>Estado</th><th></th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function modificarAsignatura(id){
+  const a = asignaturas.find(x=>x.id===id);
+  const ngt = parseInt(prompt(`Grupos de TEORÍA para "${a.nombre}":`, a.ngt));
+  if(isNaN(ngt) || ngt<0) return;
+  const ngl = parseInt(prompt(`Grupos de LABORATORIO por teoría:`, a.ngl));
+  if(isNaN(ngl) || ngl<0) return;
+  if(!confirm("¿Guardar los cambios? El sistema regenerará los grupos de esta asignatura.")) return;
+
+  // preserve groups that already have docente assigned when possible, otherwise regenerate
+  const hasAssigned = a.grupos.some(g=>g.docenteId);
+  if(hasAssigned && (ngt !== a.ngt || ngl !== a.ngl)){
+    toast("No se pudo regenerar: existen grupos ya asignados. Reasigne antes de modificar la estructura.");
+    return;
+  }
+  a.ngt = ngt; a.ngl = ngl;
+  const nuevosGrupos = [];
+  for(let t=1;t<=ngt;t++){
+    nuevosGrupos.push({tipo:"TEORIA", grupo:String(t), seccion:null, horas:a.ht, docenteId:null, horario:false});
+    const letters = "ABCDEFGH";
+    for(let l=0;l<ngl;l++){
+      nuevosGrupos.push({tipo:"PRACTICA", grupo:`${t}${letters[l]}`, seccion:null, horas:a.hp, docenteId:null, horario:false});
+    }
+  }
+  a.grupos = nuevosGrupos;
+  a.estado = "COMPLETO";
+  toast("Asignatura modificada y grupos regenerados.");
+  render();
+}
+
+function eliminarAsignatura(id){
+  const a = asignaturas.find(x=>x.id===id);
+  const bloqueada = a.grupos.some(g=>g.docenteId || g.horario);
+  if(bloqueada){ toast("No se puede eliminar: tiene carga asignada u horario."); return; }
+  if(confirm(`¿Eliminar la asignatura "${a.nombre}" del periodo?`)){
+    asignaturas = asignaturas.filter(x=>x.id!==id);
+    toast("Asignatura eliminada.");
+    render();
+  }
+}
+
+function agregarAsignatura(){
+  if(ofertadasPendientes.length===0){ toast("No hay asignaturas ofertadas pendientes de agregar."); return; }
+  const opciones = ofertadasPendientes.map((o,i)=>`${i+1}. ${o.codigo} — ${o.nombre}`).join("\n");
+  const sel = prompt("Seleccione asignatura a agregar:\n" + opciones);
+  const idx = parseInt(sel) - 1;
+  if(isNaN(idx) || !ofertadasPendientes[idx]) return;
+  const o = ofertadasPendientes[idx];
+  const ngt = parseInt(prompt("Número de grupos de TEORÍA:", "1")) || 1;
+  const ngl = parseInt(prompt("Número de grupos de LABORATORIO por teoría:", "0")) || 0;
+  if(!confirm(`¿Guardar "${o.nombre}" con ${ngt} teoría / ${ngl} laboratorio?`)) return;
+
+  const grupos = [];
+  const letters = "ABCDEFGH";
+  for(let t=1;t<=ngt;t++){
+    grupos.push({tipo:"TEORIA", grupo:String(t), seccion:null, horas:o.ht, docenteId:null, horario:false});
+    for(let l=0;l<ngl;l++) grupos.push({tipo:"PRACTICA", grupo:`${t}${letters[l]}`, seccion:null, horas:o.hp, docenteId:null, horario:false});
+  }
+  asignaturas.push({id: Date.now(), codigo:o.codigo, nombre:o.nombre, especialidad:o.especialidad, plan:o.plan, ciclo:o.ciclo,
+    ht:o.ht, hp:o.hp, lab: o.hp>0?"SI":"NO", nma:0, nah:0, ngt, ngl, mod:"V", estado:"COMPLETO", grupos});
+  ofertadasPendientes.splice(idx,1);
+  toast("Asignatura agregada a la lista.");
+  render();
+}
+
+/* ======================================================================
+   4. DIRECTORIO › PERSONA
+   ====================================================================== */
+function renderDirPersona(el){
+  const rows = directorio.map((p,i)=>`
+    <tr>
+      <td class="mono">${i+1}</td>
+      <td>${p.apPat} ${p.apMat} ${p.nombres}</td>
+      <td>D.N.I.</td>
+      <td class="mono">${p.dni}</td>
+      <td>${p.fecha}</td>
+      <td style="text-align:right;">
+        <button class="icon-btn edit" title="Editar" onclick="editarPersona('${p.dni}')">✎</button>
+      </td>
+    </tr>`).join("") || `<tr class="empty-row"><td colspan="6">No existe registro</td></tr>`;
+
+  el.innerHTML = `
+    ${folio("Directorio · Personas")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Personas Activas</span>
+        <div class="toolbar"><button class="btn btn-dark btn-sm" onclick="agregarPersona()">＋ Agregar</button></div>
+      </div>
+      <div class="panel-body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Nro</th><th>Nombre</th><th>Documento</th><th>Número</th><th>Fecha de ingreso</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function agregarPersona(){
+  const dni = prompt("Ingrese DNI:");
+  if(!dni) return;
+  if(directorio.some(p=>p.dni===dni)){ toast("El DNI ya existe en el directorio."); return; }
+  const nombres = prompt("Nombres:"); if(!nombres) return;
+  const apPat = prompt("Apellido paterno:"); if(!apPat) return;
+  const apMat = prompt("Apellido materno:"); if(!apMat) return;
+  if(!confirm("¿Guardar nueva persona en el directorio?")) return;
+  directorio.push({dni, nombres, apPat, apMat, sexo:"", telefono:"", correo:"", fecha: new Date().toISOString().slice(0,10)});
+  toast("Persona agregada al directorio.");
+  render();
+}
+
+function editarPersona(dni){
+  const p = directorio.find(x=>x.dni===dni);
+  const nombres = prompt("Nombres:", p.nombres); if(nombres===null) return;
+  const tel = prompt("Teléfono:", p.telefono); if(tel===null) return;
+  if(!confirm("¿Guardar los cambios?")) return;
+  p.nombres = nombres; p.telefono = tel;
+  toast("Datos actualizados.");
+  render();
+}
+
+/* ======================================================================
+   5. DIRECTORIO › BUSCAR
+   ====================================================================== */
+function renderDirBuscar(el, state={tipo:'NOMBRES', q:'', result:null}){
+  el.innerHTML = `
+    ${folio("Directorio · Buscar")}
+    <div class="panel">
+      <div class="panel-head"><span>Buscar Persona</span></div>
+      <div class="panel-body">
+        <div class="search-inline">
+          <div>
+            <span class="f-label">Tipo de búsqueda</span>
+            <select class="f-input" id="dirTipo">
+              <option value="NOMBRES" ${state.tipo==='NOMBRES'?'selected':''}>Nombres</option>
+              <option value="DNI" ${state.tipo==='DNI'?'selected':''}>DNI</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <span class="f-label">Ingrese datos y de Enter</span>
+            <input class="f-input" id="dirQ" value="${state.q}" placeholder="Buscar…" onkeydown="if(event.key==='Enter') buscarDirectorio()">
+          </div>
+          <button class="btn btn-dark" onclick="buscarDirectorio()">Buscar</button>
+        </div>
+        <div id="dirResult"></div>
+      </div>
+    </div>`;
+  if(state.result) pintarResultadoBusqueda(state.result);
+}
+
+function buscarDirectorio(){
+  const tipo = document.getElementById('dirTipo').value;
+  const q = document.getElementById('dirQ').value.trim().toLowerCase();
+  let results;
+  if(!q){ results = directorio; }
+  else if(tipo==='DNI'){ results = directorio.filter(p=>p.dni.includes(q)); }
+  else { results = directorio.filter(p=>(p.apPat+" "+p.apMat+" "+p.nombres).toLowerCase().includes(q)); }
+  pintarResultadoBusqueda(results);
+}
+
+function pintarResultadoBusqueda(results){
+  const box = document.getElementById('dirResult');
+  if(!results.length){ box.innerHTML = `<p class="helper">Sin coincidencias.</p>`; return; }
+  box.innerHTML = `<div class="tbl-wrap" style="margin-top:14px;">
+    <table>
+      <thead><tr><th>Nombre</th><th>DNI</th><th>Teléfono</th><th>Correo</th><th></th></tr></thead>
+      <tbody>${results.map(p=>`
+        <tr>
+          <td>${p.apPat} ${p.apMat} ${p.nombres}</td>
+          <td class="mono">${p.dni}</td>
+          <td>${p.telefono||'—'}</td>
+          <td>${p.correo||'—'}</td>
+          <td><button class="btn btn-sm btn-ghost" onclick="editarPersona('${p.dni}')">Editar</button></td>
+        </tr>`).join("")}</tbody>
+    </table></div>`;
+}
+
+/* ======================================================================
+   6. CARGA LECTIVA › ASIGNACIÓN
+   ====================================================================== */
+function listaSinAsignar(filtro=""){
+  const out = [];
+  asignaturas.forEach(a=>{
+    a.grupos.forEach((g, gi)=>{
+      if(!g.docenteId && a.nombre.toLowerCase().includes(filtro.toLowerCase())){
+        out.push({a, g, gi});
+      }
+    });
+  });
+  return out;
+}
+
+function renderAsignacion(el, filtro=""){
+  const pend = listaSinAsignar(filtro);
+  const rows = pend.map(({a,g,gi})=>`
+    <tr>
+      <td class="mono">${a.codigo}</td>
+      <td>${a.nombre}</td>
+      <td>${a.especialidad}</td>
+      <td>${a.plan}</td>
+      <td>${a.ciclo}</td>
+      <td>${g.horas}</td>
+      <td>${g.tipo==='TEORIA'?'Teoría':'Práctica'}</td>
+      <td>${g.grupo}</td>
+      <td>${a.mod}</td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm btn-dark" onclick="asignarPrompt(${a.id}, ${gi})">Asignar</button>
+      </td>
+    </tr>`).join("") || `<tr class="empty-row"><td colspan="10">No hay más registros pendientes de asignación.</td></tr>`;
+
+  el.innerHTML = `
+    ${folio("Carga Lectiva · Asignación")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Sin Asignación</span>
+        <div class="toolbar">
+          <input class="f-input" style="width:200px;" id="asigFiltro" placeholder="Filtrar por asignatura…" value="${filtro}" onkeydown="if(event.key==='Enter') render_Asignacion_filtro()">
+          <button class="btn btn-sm" onclick="render_Asignacion_filtro()">Filtrar</button>
+          <button class="btn btn-sm" onclick="navigate('asignacion')">Listar todo</button>
+          <button class="btn btn-sm btn-maroon" onclick="generarCargaAutomatica()">✨ Generar carga automáticamente</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="helper" style="margin-top:0;">
+          Mientras un grupo no tenga horario asignado, la carga puede ser eliminada o reasignada libremente.
+        </p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Código</th><th>Asignatura</th><th>Especialidad</th><th>Plan</th><th>Ciclo</th><th>Hrs</th><th>Tipo</th><th>Grupo</th><th>Mod</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+function render_Asignacion_filtro(){
+  const f = document.getElementById('asigFiltro').value;
+  renderAsignacion(document.querySelector('.view'), f);
+}
+
+// TODO (siguiente paso): esta función llamará al modelo de Machine Learning
+// (predicción de matriculados por asignatura) para sugerir automáticamente
+// el número de grupos y, cuando aplique, la asignación de docentes.
+function generarCargaAutomatica(){
+  toast("Función de generación automática con Machine Learning: próximo paso.");
+}
+
+function asignarPrompt(asignaturaId, gi){
+  const opciones = docentes.map((d,i)=>`${i+1}. ${d.nombre}`).join("\n");
+  const sel = prompt("Seleccione el docente a asignar:\n"+opciones);
+  const idx = parseInt(sel)-1;
+  if(isNaN(idx) || !docentes[idx]) return;
+  const docente = docentes[idx];
+  const a = asignaturas.find(x=>x.id===asignaturaId);
+  const g = a.grupos[gi];
+  if(!confirm(`¿Asignar "${a.nombre}" (${g.tipo} ${g.grupo}) a ${docente.nombre}?`)) return;
+  g.docenteId = docente.id;
+  toast("Carga asignada correctamente.");
+  render();
+}
+
+/* ======================================================================
+   7. CARGA LECTIVA › REASIGNACIÓN CARGA
+   ====================================================================== */
+function listaAsignada(filtro=""){
+  const out = [];
+  asignaturas.forEach(a=>{
+    a.grupos.forEach((g,gi)=>{
+      if(g.docenteId && a.nombre.toLowerCase().includes(filtro.toLowerCase())){
+        const doc = docentes.find(d=>d.id===g.docenteId);
+        out.push({a,g,gi,doc});
+      }
+    });
+  });
+  return out;
+}
+
+function renderReasignacionCarga(el, filtro=""){
+  const list = listaAsignada(filtro);
+  const rows = list.map(({a,g,gi,doc})=>`
+    <tr>
+      <td class="mono">${a.codigo}</td>
+      <td>${a.nombre}</td>
+      <td>${doc? doc.nombre : '—'}</td>
+      <td>${a.especialidad}</td>
+      <td>${a.plan}/${a.ciclo}</td>
+      <td>${g.grupo}</td>
+      <td>${g.tipo==='TEORIA'?'Teoría':'Práctica'}</td>
+      <td>${g.seccion?`<span class="pill pill-neutral">${g.seccion}</span>`:'—'}</td>
+      <td style="text-align:right;">
+        <button class="icon-btn info" title="Reasignar" onclick="reasignarCargaPrompt(${a.id}, ${gi})">⇄</button>
+      </td>
+    </tr>`).join("") || `<tr class="empty-row"><td colspan="9">No existe registro</td></tr>`;
+
+  el.innerHTML = `
+    ${folio("Carga Lectiva · Reasignación de carga")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Carga Asignada</span>
+        <div class="toolbar">
+          <input class="f-input" style="width:200px;" id="reasigFiltro" placeholder="Filtrar por asignatura…" value="${filtro}" onkeydown="if(event.key==='Enter') render_Reasig_filtro()">
+          <button class="btn btn-sm" onclick="render_Reasig_filtro()">Filtrar</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="helper" style="margin-top:0;">
+          Cambia la carga lectiva designada de un docente a otro. Si la asignatura pertenece a una
+          agrupación, todos los grupos de esa sección se reasignan al nuevo docente.
+        </p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Código</th><th>Asignatura</th><th>Docente</th><th>Especialidad</th><th>Plan/Ciclo</th><th>Grupo</th><th>Tipo</th><th>Sección</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+function render_Reasig_filtro(){
+  const f = document.getElementById('reasigFiltro').value;
+  renderReasignacionCarga(document.querySelector('.view'), f);
+}
+
+function reasignarCargaPrompt(asignaturaId, gi){
+  const a = asignaturas.find(x=>x.id===asignaturaId);
+  const g = a.grupos[gi];
+  if(!confirm("¿Desea modificar la carga asignada?")) return;
+  const opciones = docentes.map((d,i)=>`${i+1}. ${d.nombre}`).join("\n");
+  const sel = prompt("Seleccione nuevo docente:\n"+opciones);
+  const idx = parseInt(sel)-1;
+  if(isNaN(idx) || !docentes[idx]) return;
+  const nuevo = docentes[idx];
+
+  // simple cruce de horario validation: if new docente already has a group with horario=true in same ciclo+day - simplified check by same tipo & plan
+  const conflicto = asignaturas.some(other => other.grupos.some(og => og!==g && og.docenteId===nuevo.id && og.horario && og.tipo===g.tipo && other.plan===a.plan && other.ciclo===a.ciclo));
+  if(conflicto && !confirm("Aviso: se detectó posible cruce de horario para este docente. ¿Continuar de todas formas?")) return;
+
+  if(g.seccion){
+    // reasign whole section
+    asignaturas.forEach(other=>other.grupos.forEach(og=>{ if(og.seccion===g.seccion) og.docenteId = nuevo.id; }));
+    toast(`Toda la sección "${g.seccion}" fue reasignada a ${nuevo.nombre}.`);
+  } else {
+    g.docenteId = nuevo.id;
+    toast("Carga reasignada correctamente.");
+  }
+  render();
+}
+
+/* ======================================================================
+   8. CARGA LECTIVA › REASIGNACIÓN DOCENTE
+   ====================================================================== */
+function renderReasignacionDocente(el, filtro=""){
+  const rows = docentes.filter(d=>d.nombre.toLowerCase().includes(filtro.toLowerCase())).map(d=>{
+    const h = docenteHoras(d.id);
+    return `<tr>
+      <td>${d.nombre}</td>
+      <td>${d.tipo}</td>
+      <td>${d.categoria}</td>
+      <td>${h.ht}</td><td>${h.hp}</td><td><strong>${h.total}</strong></td>
+      <td style="text-align:right;">
+        <button class="icon-btn info" title="Reasignar toda su carga" onclick="reasignarDocentePrompt(${d.id})" ${h.total===0?'disabled':''}>⇄</button>
+      </td>
+    </tr>`;
+  }).join("") || `<tr class="empty-row"><td colspan="7">No existe registro</td></tr>`;
+
+  el.innerHTML = `
+    ${folio("Carga Lectiva · Reasignación de docente")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Carga Docente</span>
+        <div class="toolbar">
+          <input class="f-input" style="width:200px;" id="reasigDocFiltro" placeholder="Filtrar docente…" value="${filtro}" onkeydown="if(event.key==='Enter') render_ReasigDoc_filtro()">
+          <button class="btn btn-sm" onclick="render_ReasigDoc_filtro()">Filtrar</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="helper" style="margin-top:0;">Transfiere toda la carga lectiva de un docente a otro docente.</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Docente</th><th>Tipo</th><th>Categoría</th><th>HT</th><th>HP</th><th>Total</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+function render_ReasigDoc_filtro(){
+  const f = document.getElementById('reasigDocFiltro').value;
+  renderReasignacionDocente(document.querySelector('.view'), f);
+}
+
+function reasignarDocentePrompt(docenteId){
+  const doc = docentes.find(d=>d.id===docenteId);
+  if(!confirm(`¿Desea reasignar toda la carga de ${doc.nombre} a otro docente?`)) return;
+  const opciones = docentes.filter(d=>d.id!==docenteId).map((d,i)=>`${i+1}. ${d.nombre}`).join("\n");
+  const sel = prompt("Seleccione el nuevo docente responsable:\n"+opciones);
+  const candidatos = docentes.filter(d=>d.id!==docenteId);
+  const idx = parseInt(sel)-1;
+  if(isNaN(idx) || !candidatos[idx]) return;
+  const nuevo = candidatos[idx];
+  if(!confirm(`Confirmar: toda la carga de ${doc.nombre} pasará a ${nuevo.nombre}.`)) return;
+  asignaturas.forEach(a=>a.grupos.forEach(g=>{ if(g.docenteId===docenteId) g.docenteId = nuevo.id; }));
+  toast(`Carga reasignada de ${doc.nombre} a ${nuevo.nombre}.`);
+  render();
+}
+
+/* ======================================================================
+   9. CARGA LECTIVA › AGRUPACIÓN
+   ====================================================================== */
+let seccionesPorDocente = {}; // docenteId -> [{nombre, tipo, count}]
+
+function renderAgrupacion(el, filtro=""){
+  const rows = docentes.filter(d=>d.nombre.toLowerCase().includes(filtro.toLowerCase())).map(d=>{
+    const h = docenteHoras(d.id);
+    return `<tr>
+      <td>${d.nombre}</td>
+      <td>${d.tipo}</td>
+      <td>${d.categoria}</td>
+      <td>${h.ht}</td><td>${h.hp}</td><td><strong>${h.total}</strong></td>
+      <td style="text-align:right;">
+        <button class="icon-btn info" title="Agrupar carga" onclick="abrirAgrupacion(${d.id})" ${h.total===0?'disabled':''}>⚏</button>
+      </td>
+    </tr>`;
+  }).join("") || `<tr class="empty-row"><td colspan="7">No existe registro</td></tr>`;
+
+  el.innerHTML = `
+    ${folio("Carga Lectiva · Agrupación")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Carga Docente</span>
+        <div class="toolbar">
+          <input class="f-input" style="width:200px;" id="agrupFiltro" placeholder="Filtrar docente…" value="${filtro}" onkeydown="if(event.key==='Enter') render_Agrup_filtro()">
+          <button class="btn btn-sm" onclick="render_Agrup_filtro()">Filtrar</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="helper" style="margin-top:0;">
+          Une varias especialidades en una misma sección de clase cuando un docente dicta la misma
+          asignatura para distintas escuelas en una sola aula, evitando que la carga se sume más de una vez.
+        </p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Docente</th><th>Tipo</th><th>Categoría</th><th>HT</th><th>HP</th><th>Total</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="agrupacionDetalle"></div>`;
+}
+function render_Agrup_filtro(){
+  const f = document.getElementById('agrupFiltro').value;
+  renderAgrupacion(document.querySelector('.view'), f);
+}
+
+function abrirAgrupacion(docenteId){
+  const doc = docentes.find(d=>d.id===docenteId);
+  if(!confirm(`¿Ver / crear secciones para ${doc.nombre}?`)) return;
+  pintarSecciones(docenteId);
+}
+
+function gruposDelDocente(docenteId){
+  const out = [];
+  asignaturas.forEach(a=>a.grupos.forEach((g,gi)=>{ if(g.docenteId===docenteId) out.push({a,g,gi}); }));
+  return out;
+}
+
+function pintarSecciones(docenteId){
+  const doc = docentes.find(d=>d.id===docenteId);
+  const grupos = gruposDelDocente(docenteId);
+  const secciones = {};
+  grupos.forEach(({a,g})=>{
+    if(g.seccion){
+      secciones[g.seccion] = secciones[g.seccion] || {tipo:g.tipo, items:[]};
+      secciones[g.seccion].items.push(`${a.codigo} | ${g.tipo==='TEORIA'?'T':'P'}-${g.grupo}`);
+    }
+  });
+
+  const filasSecciones = Object.keys(secciones).map(s=>`
+    <tr>
+      <td>${s}</td>
+      <td>${secciones[s].tipo==='TEORIA'?'Teoría':'Práctica'}</td>
+      <td>${secciones[s].items.length}</td>
+      <td>${secciones[s].items.join(" , ")}</td>
+      <td style="text-align:right;">
+        <button class="icon-btn danger" title="Eliminar sección" onclick="eliminarSeccion('${docenteId}','${s}')">✕</button>
+      </td>
+    </tr>`).join("") || `<tr class="empty-row"><td colspan="5">Sin secciones creadas.</td></tr>`;
+
+  const box = document.getElementById('agrupacionDetalle');
+  box.innerHTML = `
+    <div class="panel">
+      <div class="panel-head">
+        <span>Secciones · ${doc.nombre}</span>
+        <div class="toolbar">
+          <button class="btn btn-sm btn-dark" onclick="crearSeccion(${docenteId}, 'TEORIA')">＋ Nueva sección teoría</button>
+          <button class="btn btn-sm btn-dark" onclick="crearSeccion(${docenteId}, 'PRACTICA')">＋ Nueva sección práctica</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Sección</th><th>Tipo</th><th>Cantidad</th><th>Asignaturas agrupadas</th><th></th></tr></thead>
+            <tbody>${filasSecciones}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function crearSeccion(docenteId, tipo){
+  const grupos = gruposDelDocente(docenteId).filter(({a,g})=>g.tipo===tipo && !g.seccion);
+  if(grupos.length < 2){ toast("Se requieren al menos 2 grupos del mismo tipo sin sección para agrupar."); return; }
+  const opciones = grupos.map(({a,g},i)=>`${i+1}. ${a.codigo} — ${a.especialidad} (${g.grupo})`).join("\n");
+  const sel = prompt(`Seleccione los números a incluir en la nueva sección (separados por coma):\n${opciones}`);
+  if(!sel) return;
+  const idxs = sel.split(",").map(s=>parseInt(s.trim())-1).filter(i=>!isNaN(i) && grupos[i]);
+  if(idxs.length < 2){ toast("Debe seleccionar al menos 2 elementos."); return; }
+  const secNum = Object.values(document.querySelectorAll ? {} : {}); // no-op
+  const existentes = new Set();
+  asignaturas.forEach(a=>a.grupos.forEach(g=>{ if(g.seccion) existentes.add(g.seccion); }));
+  let n=1; while(existentes.has("SECCIÓN "+n)) n++;
+  const nombreSeccion = "SECCIÓN " + n;
+  if(!confirm(`¿Confirmar creación de "${nombreSeccion}" con ${idxs.length} asignaturas agrupadas?`)) return;
+  idxs.forEach(i=>{ grupos[i].g.seccion = nombreSeccion; });
+  toast(`${nombreSeccion} creada correctamente.`);
+  pintarSecciones(docenteId);
+  render_Agrup_refresh();
+}
+function render_Agrup_refresh(){
+  const f = document.getElementById('agrupFiltro') ? document.getElementById('agrupFiltro').value : "";
+  const view = document.querySelector('.view');
+  const kept = document.getElementById('agrupacionDetalle') ? document.getElementById('agrupacionDetalle').innerHTML : "";
+  renderAgrupacion(view, f);
+  document.getElementById('agrupacionDetalle').innerHTML = kept;
+}
+
+function eliminarSeccion(docenteId, seccion){
+  if(!confirm(`¿Eliminar la ${seccion}? Se validará que no tenga horario asignado.`)) return;
+  asignaturas.forEach(a=>a.grupos.forEach(g=>{ if(g.seccion===seccion) g.seccion = null; }));
+  toast("Sección eliminada.");
+  pintarSecciones(parseInt(docenteId));
+}
+
+/* ======================================================================
+   10. CARGA LECTIVA › DESHACER CAMBIOS
+   ====================================================================== */
+function renderDeshacer(el){
+  el.innerHTML = `
+    ${folio("Carga Lectiva · Deshacer Cambios")}
+    <div class="panel">
+      <div class="panel-head"><span>Deshacer Cambios</span></div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="full">
+            <span class="f-label">Tener en cuenta</span>
+            <div class="f-static">Se perderán los cambios realizados sobre la carga lectiva definitiva.</div>
+          </div>
+          <div>
+            <span class="f-label">Deshacer</span>
+            <select class="f-input" id="deshacerSel">
+              <option value="NO" ${!deshacerHabilitado?'selected':''}>NO</option>
+              <option value="SI" ${deshacerHabilitado?'selected':''}>SI</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-maroon" onclick="guardarDeshacer()">Guardar</button>
+        <p class="helper">
+          Esta acción solo tiene efecto cuando la carga lectiva definitiva está habilitada, y permite
+          revertir los cambios realizados a la carga lectiva definitiva (no a la propuesta).
+        </p>
+      </div>
+    </div>`;
+}
+function guardarDeshacer(){
+  const val = document.getElementById('deshacerSel').value;
+  if(val==='SI'){
+    if(cargaTipo!=='DEFINITIVA'){ toast("Solo disponible cuando la carga lectiva definitiva está habilitada."); return; }
+    if(confirm("¿Confirma deshacer los cambios de la carga lectiva definitiva?")){
+      toast("Los cambios de la carga definitiva fueron revertidos.");
+      deshacerHabilitado = false;
+      render();
+    }
+  } else {
+    deshacerHabilitado = false;
+    toast("Sin cambios.");
+  }
+}
+
+/* ======================================================================
+   11. CONSULTAS › CARGA DOCENTE
+   ====================================================================== */
+function renderConsultaDocente(el, selId=null){
+  const opciones = docentes.map(d=>`<option value="${d.id}" ${selId==d.id?'selected':''}>${d.nombre}</option>`).join("");
+  let detalle = "";
+  if(selId){
+    const d = docentes.find(x=>x.id==selId);
+    const grupos = gruposDelDocente(d.id);
+    detalle = `
+      <div class="stat-row">
+        <div class="stat-card"><div class="n">${d.tipo}</div><div class="l">Tipo</div></div>
+        <div class="stat-card" style="min-width:220px;"><div class="n" style="font-size:14px;">${d.categoria}</div><div class="l">Categoría</div></div>
+        <div class="stat-card"><div class="n">${docenteHoras(d.id).total}</div><div class="l">Horas asignadas</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Código</th><th>Asignatura</th><th>Especialidad</th><th>Plan</th><th>Ciclo</th><th>Horas</th><th>Tipo</th><th>Grupo</th><th>Sección</th></tr></thead>
+          <tbody>${grupos.map(({a,g})=>`
+            <tr>
+              <td class="mono">${a.codigo}</td><td>${a.nombre}</td><td>${a.especialidad}</td>
+              <td>${a.plan}</td><td>${a.ciclo}</td><td>${g.horas}</td>
+              <td>${g.tipo==='TEORIA'?'Teoría':'Práctica'}</td><td>${g.grupo}</td>
+              <td>${g.seccion?`<span class="pill pill-neutral">${g.seccion}</span>`:'Ninguno'}</td>
+            </tr>`).join("") || `<tr class="empty-row"><td colspan="9">Este docente no tiene carga asignada.</td></tr>`}</tbody>
+        </table>
+      </div>`;
+  }
+  el.innerHTML = `
+    ${folio("Consultas · Carga Docente")}
+    <div class="panel">
+      <div class="panel-head"><span>Filtro por Docente</span></div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div>
+            <span class="f-label">Tipo de carga</span>
+            <select class="f-input" id="consTipo">
+              <option ${cargaTipo==='PROPUESTA'?'selected':''}>PROPUESTA</option>
+              <option ${cargaTipo==='DEFINITIVA'?'selected':''}>DEFINITIVA</option>
+            </select>
+          </div>
+          <div>
+            <span class="f-label">Seleccione docente</span>
+            <select class="f-input" id="consDoc" onchange="consultarDocenteSel()">
+              <option value="">— Seleccione —</option>
+              ${opciones}
+            </select>
+          </div>
+        </div>
+        ${detalle}
+      </div>
+    </div>`;
+}
+function consultarDocenteSel(){
+  const id = document.getElementById('consDoc').value;
+  renderConsultaDocente(document.querySelector('.view'), id || null);
+}
+
+/* ======================================================================
+   12. CONSULTAS › CARGA ASIGNATURA
+   ====================================================================== */
+function renderConsultaAsignatura(el, selId=null){
+  const opciones = asignaturas.map(a=>`<option value="${a.id}" ${selId==a.id?'selected':''}>${a.codigo} — ${a.nombre}</option>`).join("");
+  let detalle = "";
+  if(selId){
+    const a = asignaturas.find(x=>x.id==selId);
+    detalle = `
+      <div class="stat-row">
+        <div class="stat-card"><div class="n">${a.plan}</div><div class="l">Currícula</div></div>
+        <div class="stat-card"><div class="n">${a.ciclo}</div><div class="l">Ciclo</div></div>
+        <div class="stat-card"><div class="n">${a.ht}|${a.hp}</div><div class="l">Horas T|P</div></div>
+        <div class="stat-card"><div class="n">${a.nma}|${a.nah}</div><div class="l">Matric.|Habil.</div></div>
+        <div class="stat-card"><div class="n">${a.estado}</div><div class="l">Estado</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Tipo</th><th>Horas</th><th>Grupo</th><th>Sección</th><th>Docente</th></tr></thead>
+          <tbody>${a.grupos.map(g=>{
+            const doc = g.docenteId ? docentes.find(d=>d.id===g.docenteId) : null;
+            return `<tr>
+              <td>${g.tipo==='TEORIA'?'Teoría':'Práctica'}</td><td>${g.horas}</td><td>${g.grupo}</td>
+              <td>${g.seccion?`<span class="pill pill-neutral">${g.seccion}</span>`:'Ninguno'}</td>
+              <td>${doc ? doc.nombre : '<em style="color:var(--ink-soft);">Sin asignar</em>'}</td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table>
+      </div>`;
+  }
+  el.innerHTML = `
+    ${folio("Consultas · Carga Asignatura")}
+    <div class="panel">
+      <div class="panel-head"><span>Filtro por Asignatura</span></div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div>
+            <span class="f-label">Tipo de carga</span>
+            <select class="f-input" id="consTipoA">
+              <option ${cargaTipo==='PROPUESTA'?'selected':''}>PROPUESTA</option>
+              <option ${cargaTipo==='DEFINITIVA'?'selected':''}>DEFINITIVA</option>
+            </select>
+          </div>
+          <div>
+            <span class="f-label">Seleccione asignatura</span>
+            <select class="f-input" id="consAsig" onchange="consultarAsignaturaSel()">
+              <option value="">— Seleccione —</option>
+              ${opciones}
+            </select>
+          </div>
+        </div>
+        ${detalle}
+      </div>
+    </div>`;
+}
+function consultarAsignaturaSel(){
+  const id = document.getElementById('consAsig').value;
+  renderConsultaAsignatura(document.querySelector('.view'), id || null);
+}
+
+/* ======================================================================
+   13-17. REPORTES
+   ====================================================================== */
+function downloadCSV(filename, headers, rows){
+  const csv = [headers.join(",")].concat(rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(","))).join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function dropdown(id, label, options, onSelect, current){
+  return `
+    <div class="dropdown-wrap">
+      <button class="btn btn-sm" onclick="toggleDropdown('${id}')">${label} ▾</button>
+      <div class="dropdown-menu" id="${id}">
+        ${options.map(o=>`<button class="${o===current?'active-opt':''}" onclick="${onSelect}('${o}');toggleDropdown('${id}')">${o}</button>`).join("")}
+      </div>
+    </div>`;
+}
+function toggleDropdown(id){
+  document.querySelectorAll('.dropdown-menu').forEach(m=>{ if(m.id!==id) m.classList.remove('open'); });
+  document.getElementById(id).classList.toggle('open');
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.dropdown-wrap')) document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('open'));
+});
+
+let repCargaListado = "NOMBRADOS"; // NOMBRADOS | CONTRATADOS | POR CONTRATAR
+function setRepCargaListado(v){ repCargaListado = v; render(); }
+function setCargaTipo(v){ cargaTipo = v; render(); }
+
+function renderRepCarga(el){
+  let tipoFiltro = repCargaListado==="NOMBRADOS" ? "N" : repCargaListado==="CONTRATADOS" ? "C" : "F";
+  const list = docentes.filter(d => repCargaListado==="POR CONTRATAR" ? d.nombre.startsWith("CONTRATO") : (repCargaListado==="NOMBRADOS" ? d.tipo==="N" : d.tipo==="C" && !d.nombre.startsWith("CONTRATO")));
+  const rows = list.map(d=>{
+    const grupos = gruposDelDocente(d.id);
+    return grupos.map(({a,g})=>`<tr>
+      <td>${d.nombre}</td><td>${d.categoria}</td><td>${a.nombre}</td><td>${g.horas}</td>
+      <td>${g.tipo==='TEORIA'?'HT':'HP'}</td><td>${a.ciclo}</td><td>${a.especialidad}</td>
+    </tr>`).join("");
+  }).join("") || `<tr class="empty-row"><td colspan="7">Sin carga registrada para este grupo.</td></tr>`;
+
+  el.innerHTML = `
+    ${folio("Reportes · Carga Lectiva")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>[${repCargaListado}]</span>
+        <div class="toolbar">
+          ${dropdown('ddTipoCarga1','Tipo', ["PROPUESTA","DEFINITIVA"], 'setCargaTipo', cargaTipo)}
+          ${dropdown('ddListarCarga','Listar', ["NOMBRADOS","CONTRATADOS","POR CONTRATAR"], 'setRepCargaListado', repCargaListado)}
+          <button class="btn btn-sm btn-maroon" onclick="descargarRepCarga()">⭳ Descarga</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Docente</th><th>Categoría</th><th>Asignatura</th><th>Horas</th><th>Tipo</th><th>Ciclo</th><th>Escuela</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+function descargarRepCarga(){
+  const list = docentes.filter(d => repCargaListado==="POR CONTRATAR" ? d.nombre.startsWith("CONTRATO") : (repCargaListado==="NOMBRADOS" ? d.tipo==="N" : d.tipo==="C" && !d.nombre.startsWith("CONTRATO")));
+  const rows = [];
+  list.forEach(d=> gruposDelDocente(d.id).forEach(({a,g})=> rows.push([d.nombre,d.categoria,a.nombre,g.horas,g.tipo,a.ciclo,a.especialidad])));
+  downloadCSV(`carga_lectiva_${repCargaListado}_${cargaTipo}.csv`, ["Docente","Categoria","Asignatura","Horas","Tipo","Ciclo","Escuela"], rows);
+  toast("Reporte descargado en formato CSV.");
+}
+
+let repDocListado = "GENERAL"; // GENERAL | CON CARGA | SIN CARGA
+function setRepDocListado(v){ repDocListado = v; render(); }
+function renderRepDocentes(el){
+  let list = docentes;
+  if(repDocListado==="CON CARGA") list = docentes.filter(d=>docenteHoras(d.id).total>0);
+  if(repDocListado==="SIN CARGA") list = docentes.filter(d=>docenteHoras(d.id).total===0);
+  const rows = list.map(d=>{
+    const h = docenteHoras(d.id);
+    return `<tr><td>${d.nombre}</td><td>${d.tipo}</td><td>${d.categoria}</td><td>${h.ht}</td><td>${h.hp}</td><td><strong>${h.total}</strong></td></tr>`;
+  }).join("") || `<tr class="empty-row"><td colspan="6">No existe registro</td></tr>`;
+  el.innerHTML = `
+    ${folio("Reportes · Resumen Docentes")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>[${repDocListado}]</span>
+        <div class="toolbar">
+          ${dropdown('ddTipoDoc','Tipo', ["PROPUESTA","DEFINITIVA"], 'setCargaTipo', cargaTipo)}
+          ${dropdown('ddListarDoc','Listar', ["GENERAL","CON CARGA","SIN CARGA"], 'setRepDocListado', repDocListado)}
+          <button class="btn btn-sm btn-maroon" onclick="descargarRepDocentes()">⭳ Descarga</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Docente</th><th>Tipo</th><th>Categoría</th><th>HT</th><th>HP</th><th>Total</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>
+    </div>`;
+}
+function descargarRepDocentes(){
+  let list = docentes;
+  if(repDocListado==="CON CARGA") list = docentes.filter(d=>docenteHoras(d.id).total>0);
+  if(repDocListado==="SIN CARGA") list = docentes.filter(d=>docenteHoras(d.id).total===0);
+  const rows = list.map(d=>{ const h=docenteHoras(d.id); return [d.nombre,d.tipo,d.categoria,h.ht,h.hp,h.total]; });
+  downloadCSV(`resumen_docentes_${repDocListado}_${cargaTipo}.csv`, ["Docente","Tipo","Categoria","HT","HP","Total"], rows);
+  toast("Reporte descargado en formato CSV.");
+}
+
+let repAsigListado = "GENERAL"; // GENERAL | COMPLETOS | INCOMPLETOS
+function setRepAsigListado(v){ repAsigListado = v; render(); }
+function renderRepAsignaturas(el){
+  let list = asignaturas;
+  if(repAsigListado==="COMPLETOS") list = asignaturas.filter(a=>a.estado==='COMPLETO');
+  if(repAsigListado==="INCOMPLETOS") list = asignaturas.filter(a=>a.estado==='INCOMPLETO');
+  const rows = list.map(a=>{
+    const na = a.grupos.filter(g=>g.docenteId).length;
+    return `<tr><td>${a.codigo}</td><td>${a.nombre}</td><td>${a.especialidad}</td><td>${a.plan}</td><td>${a.ciclo}</td>
+      <td>${a.ht}</td><td>${a.hp}</td><td>${a.lab}</td><td>${a.nma}</td><td>${a.nah}</td><td>${a.ngt}</td><td>${a.ngl}</td>
+      <td>${a.grupos.length}</td><td>${na}</td></tr>`;
+  }).join("") || `<tr class="empty-row"><td colspan="14">No existe registro</td></tr>`;
+  el.innerHTML = `
+    ${folio("Reportes · Resumen Asignaturas")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>[${repAsigListado}]</span>
+        <div class="toolbar">
+          ${dropdown('ddTipoAsig','Tipo', ["PROPUESTA","DEFINITIVA"], 'setCargaTipo', cargaTipo)}
+          ${dropdown('ddListarAsig','Listar', ["GENERAL","COMPLETOS","INCOMPLETOS"], 'setRepAsigListado', repAsigListado)}
+          <button class="btn btn-sm btn-maroon" onclick="descargarRepAsignaturas()">⭳ Descarga</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Código</th><th>Asignatura</th><th>Especialidad</th><th>Plan</th><th>Ciclo</th><th>HT</th><th>HP</th><th>Lab</th><th>NMPA</th><th>NAH</th><th>NTEO</th><th>NLAB</th><th>NC</th><th>NA</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>
+    </div>`;
+}
+function descargarRepAsignaturas(){
+  let list = asignaturas;
+  if(repAsigListado==="COMPLETOS") list = asignaturas.filter(a=>a.estado==='COMPLETO');
+  if(repAsigListado==="INCOMPLETOS") list = asignaturas.filter(a=>a.estado==='INCOMPLETO');
+  const rows = list.map(a=>{ const na=a.grupos.filter(g=>g.docenteId).length; return [a.codigo,a.nombre,a.especialidad,a.plan,a.ciclo,a.ht,a.hp,a.lab,a.nma,a.nah,a.ngt,a.ngl,a.grupos.length,na]; });
+  downloadCSV(`resumen_asignaturas_${repAsigListado}_${cargaTipo}.csv`, ["Codigo","Asignatura","Especialidad","Plan","Ciclo","HT","HP","Lab","NMPA","NAH","NTEO","NLAB","NC","NA"], rows);
+  toast("Reporte descargado en formato CSV.");
+}
+
+let repMatFiltro = "ASIGNATURA"; // ASIGNATURA | ESPECIALIDAD
+let repMatListado = "GENERAL"; // GENERAL | GRUPOS
+function setRepMatFiltro(v){ repMatFiltro=v; render(); }
+function setRepMatListado(v){ repMatListado=v; render(); }
+function renderRepMatriculados(el){
+  let rows;
+  if(repMatListado==="GENERAL"){
+    rows = asignaturas.map(a=>`<tr><td>${a.codigo}</td><td>${a.nombre}</td><td>${a.especialidad}</td><td>${a.plan}</td><td>${a.ciclo}</td><td>${a.nma}</td></tr>`).join("");
+  } else {
+    rows = "";
+    asignaturas.forEach(a=>a.grupos.forEach(g=>{
+      rows += `<tr><td>${a.codigo}</td><td>${a.nombre}</td><td>${g.tipo==='TEORIA'?'Teoría':'Práctica'}</td><td>${g.grupo}</td><td>${a.nah}</td></tr>`;
+    }));
+  }
+  const headers = repMatListado==="GENERAL"
+    ? ["Código","Asignatura","Especialidad","Plan","Ciclo","N° Matriculados"]
+    : ["Código","Asignatura","Tipo","Grupo","N° Habilitados"];
+  el.innerHTML = `
+    ${folio("Reportes · Resumen Matriculados")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Asignaturas [${repMatListado}]</span>
+        <div class="toolbar">
+          ${dropdown('ddFiltroMat','Filtrar', ["ASIGNATURA","ESPECIALIDAD"], 'setRepMatFiltro', repMatFiltro)}
+          ${dropdown('ddListarMat','Listar', ["GENERAL","GRUPOS"], 'setRepMatListado', repMatListado)}
+          <button class="btn btn-sm btn-maroon" onclick="descargarRepMatriculados()">⭳ Descarga</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="tbl-wrap"><table>
+          <thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+          <tbody>${rows || `<tr class="empty-row"><td colspan="6">No existe registro</td></tr>`}</tbody>
+        </table></div>
+      </div>
+    </div>`;
+}
+function descargarRepMatriculados(){
+  let rows = [];
+  if(repMatListado==="GENERAL"){ rows = asignaturas.map(a=>[a.codigo,a.nombre,a.especialidad,a.plan,a.ciclo,a.nma]); }
+  else { asignaturas.forEach(a=>a.grupos.forEach(g=> rows.push([a.codigo,a.nombre,g.tipo,g.grupo,a.nah]))); }
+  const headers = repMatListado==="GENERAL" ? ["Codigo","Asignatura","Especialidad","Plan","Ciclo","Matriculados"] : ["Codigo","Asignatura","Tipo","Grupo","Habilitados"];
+  downloadCSV(`resumen_matriculados_${repMatListado}.csv`, headers, rows);
+  toast("Reporte descargado en formato CSV.");
+}
+
+let repEspFiltro = "ESPECIALIDAD";
+function setRepEspFiltro(v){ repEspFiltro = v; render(); }
+function renderRepEspecialidad(el){
+  const rows = asignaturas.map(a=>`<tr><td>${a.codigo}</td><td>${a.nombre}</td><td>${a.especialidad}</td><td>${a.plan}</td><td>${a.ciclo}</td><td>15-03-2023</td></tr>`).join("") || `<tr class="empty-row"><td colspan="6">No existe registro</td></tr>`;
+  el.innerHTML = `
+    ${folio("Reportes · Asignatura Especialidad")}
+    <div class="panel">
+      <div class="panel-head">
+        <span>Asignaturas requeridas por Escuela</span>
+        <div class="toolbar">
+          ${dropdown('ddFiltroEsp','Filtrar', ["ESPECIALIDAD","ASIGNATURA"], 'setRepEspFiltro', repEspFiltro)}
+          <button class="btn btn-sm btn-maroon" onclick="descargarRepEspecialidad()">⭳ Descarga</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Código</th><th>Asignatura</th><th>Especialidad</th><th>Plan</th><th>Ciclo</th><th>Fecha</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>
+    </div>`;
+}
+function descargarRepEspecialidad(){
+  const rows = asignaturas.map(a=>[a.codigo,a.nombre,a.especialidad,a.plan,a.ciclo,"15-03-2023"]);
+  downloadCSV("asignaturas_especialidad.csv", ["Codigo","Asignatura","Especialidad","Plan","Ciclo","Fecha"], rows);
+  toast("Reporte descargado en formato CSV.");
+}
+</script>
+</body>
+</html>
